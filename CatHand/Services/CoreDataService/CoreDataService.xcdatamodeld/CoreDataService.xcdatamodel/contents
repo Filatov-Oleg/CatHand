@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22225" systemVersion="23B81" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+    <entity name="InstagramPost" representedClassName="InstagramPost" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary"/>
+    </entity>
+    <entity name="InstagramStory" representedClassName="InstagramStory" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="TaskCD" representedClassName="TaskCD" syncable="YES">
+        <attribute name="creationDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isCompleted" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <relationship name="taskDateCD" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TaskDateCD" inverseName="taskCD" inverseEntity="TaskDateCD"/>
+    </entity>
+    <entity name="TaskDateCD" representedClassName="TaskDateCD" syncable="YES">
+        <attribute name="taskDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="taskCD" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="TaskCD" inverseName="taskDateCD" inverseEntity="TaskCD"/>
+    </entity>
+</model>

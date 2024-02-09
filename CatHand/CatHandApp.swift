@@ -11,7 +11,8 @@ import SwiftUI
 struct CatHandApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainScreen()
+                .environment(\.colorScheme, .dark)
         }
     }
 }

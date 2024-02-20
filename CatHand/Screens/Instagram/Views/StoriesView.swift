@@ -51,6 +51,7 @@ struct StoriesView: View {
                                 .foregroundStyle(Color("TextColor"))
                                 .font(.caption)
                         }
+                        .frame(maxWidth: 75)
                     }
                     .onAppear {
                         prepareHaptics()
@@ -77,12 +78,8 @@ struct StoriesView: View {
                             isShowAlert.toggle()
                         }
                     }
-                    .alert("Login", isPresented: $isShowAlert, actions: {
+                    .alert("Добавь название к своей истории", isPresented: $isShowAlert, actions: {
                         TextField("Текст", text: $titleText)
-
-            //            SecureField("Password", text: $password)
-
-                        
                         Button("Изменить", action: {
                             viewModel.changeStory(titleText)
                             titleText = ""
@@ -91,7 +88,7 @@ struct StoriesView: View {
                             
                         })
                     }, message: {
-                        Text("Please enter your username and password.")
+
                     })
                 }
 

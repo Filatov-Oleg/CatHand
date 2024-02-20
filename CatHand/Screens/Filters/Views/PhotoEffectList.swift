@@ -11,13 +11,15 @@ struct PhotoEffectList: View {
     
     @ObservedObject var filterImageViewModel: FilterImageViewModel
     
-    let filters: [FilterModel] = [FilterModel(filter: CIFilter.photoEffectChrome()),
-                                  FilterModel(filter: CIFilter.photoEffectFade()),
-                                  FilterModel(filter: CIFilter.photoEffectInstant()),
-                                  FilterModel(filter: CIFilter.photoEffectNoir()),
-                                  FilterModel(filter: CIFilter.photoEffectProcess()),
-                                  FilterModel(filter: CIFilter.photoEffectTonal()),
-                                  FilterModel(filter: CIFilter.photoEffectTransfer())]
+//    let filters: [FilterModel] = [FilterModel(filter: CIFilter.photoEffectChrome()),
+//                                  FilterModel(filter: CIFilter.photoEffectFade()),
+//                                  FilterModel(filter: CIFilter.photoEffectInstant()),
+//                                  FilterModel(filter: CIFilter.photoEffectNoir()),
+//                                  FilterModel(filter: CIFilter.photoEffectProcess()),
+//                                  FilterModel(filter: CIFilter.photoEffectTonal()),
+//                                  FilterModel(filter: CIFilter.photoEffectTransfer())]
+    
+    let filters: [FilterModel] = []
     
     var body: some View {
         filterView()
@@ -28,9 +30,36 @@ struct PhotoEffectList: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 ForEach(filters) { filter in
-                    PhotoFilterCell(filterImageViewModel: filterImageViewModel, inputImage: $filterImageViewModel.inputImage, currentFilter: filter.filter) {
-                        filterImageViewModel.setFilter(filter.filter)
+//                    PhotoFilterCell(filterImageViewModel: filterImageViewModel, inputImage: $filterImageViewModel.inputImage, currentFilter: filter.filter) {
+//                        filterImageViewModel.setFilter(filter.filter)
+//                    }
+                }
+                Button {
+                    filterImageViewModel.filtersType = .linearToSRGBToneCurve
+                    filterImageViewModel.setFilter(CIFilter.linearToSRGBToneCurve())
+                } label: {
+                    VStack {
+                        Image("FiltersIcon")
+                            .resizable()
+                            .frame(width: 24, height: 24)
+                        Text("linearToSRGBToneCurve")
+                            .font(.caption2)
                     }
+                    .foregroundStyle(Color("TextColor"))
+                }
+                
+                Button {
+                    filterImageViewModel.filtersType = .linearToSRGBToneCurve
+                    filterImageViewModel.setFilter(CIFilter.sRGBToneCurveToLinear())
+                } label: {
+                    VStack {
+                        Image("FiltersIcon")
+                            .resizable()
+                            .frame(width: 24, height: 24)
+                        Text("sRGBToneCurveToLinear")
+                            .font(.caption2)
+                    }
+                    .foregroundStyle(Color("TextColor"))
                 }
             }
         }

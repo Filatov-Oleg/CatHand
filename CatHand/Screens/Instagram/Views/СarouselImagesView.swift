@@ -145,23 +145,23 @@ struct СarouselImagesView: View {
                                 }
                             }
                             
-                            Button {
-                                print("Камера")
-//                                showCamera.toggle()
-                            } label: {
-                                HStack {
-                                    Image(systemName: "camera")
-                                        .font(.caption2)
-                                    Text("Камера")
-                                        .font(.caption2)
-                                }
-                                .foregroundStyle(Color.white)
-                                .padding(4)
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .stroke(.white, lineWidth: 1)
-                                }
-                            }
+//                            Button {
+//                                print("Камера")
+////                                showCamera.toggle()
+//                            } label: {
+//                                HStack {
+//                                    Image(systemName: "camera")
+//                                        .font(.caption2)
+//                                    Text("Камера")
+//                                        .font(.caption2)
+//                                }
+//                                .foregroundStyle(Color.white)
+//                                .padding(4)
+//                                .overlay {
+//                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+//                                        .stroke(.white, lineWidth: 1)
+//                                }
+//                            }
                             Spacer()
                         }
                         .padding(.leading, 24)
@@ -185,7 +185,7 @@ struct СarouselImagesView: View {
                 }
             }))
         .fullScreenCover(isPresented: $showCamera) {
-            ImagePicker1(sourceType: .camera, selectedImage: $instagramViewModel.savedPosts[instagramViewModel.savedImagesIndex].thumbnail)
+            CameraImage(sourceType: .camera, selectedImage: $instagramViewModel.savedPosts[instagramViewModel.savedImagesIndex].thumbnail)
         }
     }
 }

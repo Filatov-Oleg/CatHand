@@ -14,7 +14,9 @@ import PhotosUI
 
 struct InstagramScreen: View {
     
-    @StateObject var instagramViewModel: InstagramViewModel 
+    @Environment(\.scenePhase) var scenePhase
+    
+    @StateObject var instagramViewModel: InstagramViewModel
     
     @State private var draggingItem: ImageAsset?
     
@@ -24,9 +26,7 @@ struct InstagramScreen: View {
     
     @State var imageCell: UIImage? = UIImage(named: "catAnn")
     
-    @State var savedImageIndex: Int = -1
-    
-    @State private var selectedTab: String = "square.grid.3x3"
+    @State private var selectedTab: TabBarType = .photo
     @Namespace var animation
     
     @State private var selectedDetent: PresentationDetent = .height(165)
@@ -36,7 +36,7 @@ struct InstagramScreen: View {
             VStack {
                 switch instagramViewModel.currentState {
                 case .loading:
-                    Text("Loading...")
+                    LoaderView()
                 case .content:
                     HStack(spacing: 15) {
                         Button {
@@ -49,7 +49,7 @@ struct InstagramScreen: View {
                         }
                         Spacer(minLength: 0)
 //                        Button {
-//                            
+//
 //                        } label: {
 //                            Image(systemName: "plus.app")
 //                                .font(.title)
@@ -153,23 +153,25 @@ struct InstagramScreen: View {
 
                             
                             HStack(spacing: 0) {
-                                TabBarButton(image: "square.grid.3x3", isSystemImage: true, animation: animation, selectedTab: $selectedTab)
-                                TabBarButton(image: "play.square", isSystemImage: true, animation: animation, selectedTab: $selectedTab)
+                                TabBarButton(image: TabBarType.photo, isSystemImage: true, animation: animation, selectedTab: $selectedTab)
+                                TabBarButton(image: TabBarType.video, isSystemImage: true, animation: animation, selectedTab: $selectedTab)
                             }
                             .frame(height: 50, alignment: .bottom)
                             .background(Color.backgroundColor)
                             
                             // Posts grid view
                             
-                            if selectedTab == "square.grid.3x3" {
+                            if selectedTab == .photo {
                                 PostsGridView(viewModel: instagramViewModel,
                                               isShowCarouselImages: $isShowCarouselImages)
                             } else {
-                                VideoGridView(savedVideos: $instagramViewModel.savedVideos,
-                                              carouselType: $instagramViewModel.carouselType,
-                                              isShowCarouselImages: $isShowCarouselImages,
-                                              savedImagesIndex: $instagramViewModel.savedImagesIndex,
-                                              draggingItem: $draggingItem)
+                                
+                                Text("Будет позже")
+//                                VideoGridView(savedVideos: $instagramViewModel.savedVideos,
+//                                              carouselType: $instagramViewModel.carouselType,
+//                                              isShowCarouselImages: $isShowCarouselImages,
+//                                              savedImagesIndex: $instagramViewModel.savedImagesIndex,
+//                                              draggingItem: $draggingItem)
                             }
                             
                             
@@ -196,7 +198,6 @@ struct InstagramScreen: View {
                                 .stroke(Color.mainGradientBackground, lineWidth: 1)
                         )
                         .opacity(instagramViewModel.currentState == .content ? 1 : 0)
-                    //                    .background(.blue.shadow(.drop(color: .red.opacity(0.25), radius: 5, x: 7, y: 7)), in: Circle())
                 }
                 .padding(15)
                 
@@ -213,7 +214,7 @@ struct InstagramScreen: View {
                 
             }
             .fullScreenCover(isPresented: $isShowSettings) {
-                InstagramSettingsView(instagramViewModel: instagramViewModel) { userInfo in
+                InstagramSettingsScreen(instagramViewModel: instagramViewModel) { userInfo in
                     instagramViewModel.updateUserInfo(by: userInfo)
                 }.onDisappear {
                     isShowSettings = false
@@ -222,61 +223,24 @@ struct InstagramScreen: View {
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     if !(UserDefaultsService().needShowInstagramSettings ?? false) {
-                        print("show settings view")
                         isShowSettings = true
-                        UserDefaultsService().needShowInstagramSettings = true
                     } else {
                         instagramViewModel.fetchAllImages()
                     }
                 }
             }
-            .task {
-                instagramViewModel.fetchedImagesFromCD = await instagramViewModel.fetchImagesFromLibraty()
+            .onDisappear {
+                instagramViewModel.savePostsOrder()
             }
-        }
-    }
-}
-
-struct TabBarButton: View {
-    
-    var image: String
-    // Since we're having asset Image
-    var isSystemImage: Bool
-    var animation: Namespace.ID
-    @Binding var selectedTab: String
-    
-    var body: some View {
-        Button {
-            withAnimation(.easeInOut) {
-                selectedTab = image
-            }
-        } label: {
-            VStack(spacing: 12) {
-                (
-                    isSystemImage ? Image(systemName: image) : Image(image)
-                )
-                .renderingMode(.template)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 24, height: 24)
-                .foregroundColor(selectedTab == image ? .primary : .gray)
-                
-                ZStack {
-                    if selectedTab == image {
-                        Rectangle()
-                            .fill(Color.primary)
-                        // For smooth sliding effect...
-                            .matchedGeometryEffect(id: "TAB", in: animation)
-                    } else {
-                        Rectangle()
-                            .fill(Color.clear)
-                    }
+            .onChange(of: scenePhase) { newPhase in
+                if newPhase == .inactive {
+                    instagramViewModel.savePostsOrder()
                 }
-                .frame(height: 1)
-                
             }
-            
+            .task {
+                instagramViewModel.libraryImages = await instagramViewModel.fetchImagesFromLibrary()
+            }
         }
-
     }
 }
+

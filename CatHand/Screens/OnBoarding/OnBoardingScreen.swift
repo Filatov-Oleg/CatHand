@@ -12,41 +12,53 @@ struct OnBoardingScreen: View {
     
     @Binding var onboardingWasViewed: Bool
     
-    var body: some View {
-        VStack {
-            Text("Для корректной работы приложение предоставье доступ к библиотеке фотографий")
-            Button {
-                requestPhotoLibraryAccess()
-            } label: {
-                Text("Разрешить доступ")
-            }
-        }
-    }
+    @State private var currentTab = 0
     
-    private func requestPhotoLibraryAccess() {
-      let status = PHPhotoLibrary.authorizationStatus()
-
-      switch status {
-      case .notDetermined:
-        PHPhotoLibrary.requestAuthorization { newStatus in
-          if newStatus == .authorized {
-            print("Access granted.")
-            UserDefaultsService().onboardingWasViewed = true
-            onboardingWasViewed = true
-          } else {
-            print("Access denied.")
-          }
-        }
-      case .restricted, .denied:
-        print("Access denied or restricted.")
-      case .authorized:
-        print("Access already granted.")
-      case .limited:
-        print("Access limited.")
-      @unknown default:
-        print("Unknown authorization status.")
-      }
+    var body: some View {
+        TabView(selection: $currentTab,
+                content:  {
+            OnBoardingView(model: .init(image: "onboarding1", nextButton: "ДА, ПОКАЖИ", skipButton: "ПРОПУСТИТЬ"), onTapNext: {
+                currentTab = 1
+            }, onTapSkip: {
+                currentTab = 5
+            })
+            .tag(0)
+            OnBoardingView(model: .init(image: "onboarding2", nextButton: "ДАЛЬШЕ!", skipButton: "ПРОПУСТИТЬ"), onTapNext: {
+                currentTab = 2
+            }, onTapSkip: {
+                currentTab = 5
+            })
+            .tag(1)
+            OnBoardingView(model: .init(image: "onboarding3", nextButton: "ДАЛЬШЕ!", skipButton: "ПРОПУСТИТЬ"), onTapNext: {
+                currentTab = 3
+            }, onTapSkip: {
+                currentTab = 5
+            })
+            .tag(2)
+            OnBoardingView(model: .init(image: "onboarding4", nextButton: "ДАЛЬШЕ!", skipButton: "ПРОПУСТИТЬ"), onTapNext: {
+                currentTab = 4
+            }, onTapSkip: {
+                currentTab = 5
+            })
+            .tag(3)
+            OnBoardingView(model: .init(image: "onboarding5", nextButton: "ВСЕ ПОНЯТНО!", skipButton: "ПОВТОРИТЬ"), onTapNext: {
+                currentTab = 5
+            }, onTapSkip: {
+                currentTab = 0
+            })
+            .tag(4)
+            OnBoardingView(model: .init(image: "onboarding6", nextButton: "НАЧАТЬ", skipButton: ""), onTapNext: {
+                UserDefaultsService().onboardingWasViewed = true
+                onboardingWasViewed = true
+            }, onTapSkip: {
+                
+            })
+            .tag(5)
+        })
+        .background(Color.backgroundColor)
+        .tabViewStyle(.page(indexDisplayMode: .never))
     }
+
 }
 //
 //#Preview {

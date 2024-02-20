@@ -14,7 +14,8 @@ import UIKit
 // MARK: Remove Background API
 
 //#error("Please input your apiKey below")
-private let apiKey: String = "05c0fe00105770826224161f23699f630e91a249"
+//private let apiKey: String = "05c0fe00105770826224161f23699f630e91a249" // oofilatov
+private let apiKey: String = "0902ebe9e3625546aa094f475eb778a1cab0c2ee" //
 
 private enum K {
     static let hostURL = URL(string: "https://sdk.photoroom.com/v1/segment")!

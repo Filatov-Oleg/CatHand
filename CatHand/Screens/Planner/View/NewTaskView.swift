@@ -8,29 +8,35 @@
 import SwiftUI
 
 struct NewTaskView: View {
-    
-//    @Environment(\.managedObjectContext) var moc
+
     @ObservedObject var viewModel: PlannerViewModel
-    
-    
+    @Environment(\.dismiss) private var dismiss
+
     /// View Properties
     
     @State var taskDate: Date = .init()
-    @Environment(\.dismiss) private var dismiss
     @State private var taskTitle: String = ""
-    
-//    @State private var taskColor: Color = .teal
     
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title)
-                    .tint(.red)
+            HStack {
+                Button {
+                    dismiss()
+                } label: {
+                    Image("BackArrowIcon")
+                }
+                Spacer()
+                Button {
+                    let newTask = TaskPlanner(taskTitle: taskTitle, creationDate: taskDate, tint: Color(uiColor: UIColor(hexString: "B0B0B0")))
+                    viewModel.addNewTask(newTask)
+                    dismiss()
+                } label: {
+                    Image("DoneIcon")
+                }
+                .disabled(taskTitle == "")
+                .opacity(taskTitle == "" ? 0.5 : 1)
             }
-            .hSpacing(.leading)
+
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("Задача:")
@@ -50,45 +56,39 @@ struct NewTaskView: View {
                     Text("Дата:")
                         .font(.caption)
                         .foregroundStyle(.gray)
-                    DatePicker("", selection: $taskDate, displayedComponents: [.date, .hourAndMinute])
+                    DatePicker("", selection: $taskDate, in: Date()..., displayedComponents: [.date, .hourAndMinute])
                         .labelsHidden()
                         .accentColor(Color(uiColor: UIColor(hexString: "#EA838A")))
                         .environment(\.locale, Locale.init(identifier: "ru_RU"))
                         .datePickerStyle(.compact)
-//                        .scaleEffect(0.9, anchor: .leading)
                 }
             }
             .padding(.top, 5)
 
             Spacer(minLength: 0)
 
-            Button {
-                let newTask = TaskPlanner(taskTitle: taskTitle, creationDate: taskDate, tint: Color(uiColor: UIColor(hexString: "B0B0B0")))
-                viewModel.addNewTask(newTask)
-//                viewModel.tasks.append(newTask)
-                dismiss()
-            } label: {
-                Text("Создать")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-                    .hSpacing(.center)
-                    .padding(.vertical, 12)
-                    .background(Color.mainGradientBackground, in: RoundedRectangle(cornerRadius: 10))
-            }
-            .disabled(taskTitle == "")
-            .opacity(taskTitle == "" ? 0.5 : 1)
+//            Button {
+//                let newTask = TaskPlanner(taskTitle: taskTitle, creationDate: taskDate, tint: Color(uiColor: UIColor(hexString: "B0B0B0")))
+//                viewModel.addNewTask(newTask)
+////                viewModel.tasks.append(newTask)
+//                dismiss()
+//            } label: {
+//                Text("Создать")
+//                    .font(.title3)
+//                    .fontWeight(.semibold)
+//                    .foregroundStyle(.white)
+//                    .hSpacing(.center)
+//                    .padding(.vertical, 12)
+//                    .background(Color.mainGradientBackground, in: RoundedRectangle(cornerRadius: 10))
+//            }
+//            .disabled(taskTitle == "")
+//            .opacity(taskTitle == "" ? 0.5 : 1)
         }
         .padding(16)
-        .background(Color(uiColor: UIColor(hexString: "4C4B4B")))
+        .background(Color(uiColor: UIColor(hexString: "4C4B4B")).opacity(0.5))
     }
 }
 
-//struct NewTaskView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        NewTaskView()
-//    }
-//}
 
 
 //                VStack(alignment: .leading, spacing: 8) {

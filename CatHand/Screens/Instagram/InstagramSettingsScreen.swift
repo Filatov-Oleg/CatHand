@@ -1,15 +1,26 @@
 //
-//  InstagramSettingsView.swift
+//  InstagramSettingsScreen.swift
 //  Instafilter
 //
 //  Created by Филатов Олег Олегович on 27.11.2023.
 //
 
 import SwiftUI
+//
+//HStack(alignment: .top) {
+//    Text("Имя")
+//    VStack {
+//        TextField("", text: $name)
+//            .textFieldStyle(.plain)
+//            .foregroundStyle(Color.blackOrWhite)
+//        Rectangle().frame(height: 1)
+//            .foregroundStyle(Color.blackOrWhite.opacity(0.25))
+//    }
+//    .padding(.leading, 16)
+//}
+//.padding(.horizontal)
 
-
-
-struct InstagramSettingsView: View {
+struct InstagramSettingsScreen: View {
     
     @Environment(\.dismiss) var dismiss
     
@@ -45,6 +56,7 @@ struct InstagramSettingsView: View {
                                                      countOfFollowings: countOfFollowings)
                     
                     onSave(userInfo)
+                    UserDefaultsService().needShowInstagramSettings = true
                     dismiss()
                 } label: {
                     Text("Сохранить")
@@ -59,8 +71,18 @@ struct InstagramSettingsView: View {
                 TextField("Имя пользователя", text: $nickName)
                 TextField("Количество подписчиков", text: $countOfFollowers)
                     .keyboardType(.numberPad)
+                    .onChange(of: countOfFollowers) { newValue in
+                        if newValue.count > 5 {
+                            self.countOfFollowers = String(newValue.prefix(5))
+                        }
+                    }
                 TextField("Количество подписок", text: $countOfFollowings)
                     .keyboardType(.numberPad)
+                    .onChange(of: countOfFollowings) { newValue in
+                        if newValue.count > 5 {
+                            self.countOfFollowings = String(newValue.prefix(5))
+                        }
+                    }
                 Section("О себе") {
                     TextEditor(text: $aboutMe)
                 }
@@ -80,7 +102,7 @@ struct InstagramSettingsView: View {
     }
 }
 
-private extension InstagramSettingsView {
+private extension InstagramSettingsScreen {
     
     func isEmptyFields() -> Bool {
         return self.name.isEmpty ||

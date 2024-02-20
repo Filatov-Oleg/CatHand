@@ -8,30 +8,29 @@
 import Foundation
 import SwiftUI
 
+enum FilterScreenState {
+    case loading
+    case content
+}
 
 final public class FilterImageViewModel: ObservableObject {
     
     @Published var image: Image?
-    @Published var imageGradient: Image?
     @Published var filterIntensity = 0.5
     @Published var showingImagePicker = false
     @Published var inputImage: UIImage?
-//    @Published private var showingFilterSheet = false
     @Published var processedImage: UIImage?
-    var changedImages: [ContentImage] = []
     @Published var currentFilter: CIFilter?
-//    @Published private var showDetailFilters: Bool = false
     @Published var outputImage: CIImage?
-    @Published var point1ToPoint2 = 5.0
     @Published var filtersType: FiltersType = .none
-    
+    @Published var currentState: FilterScreenState = .content
+
+    @Published var showSaveSuccessSnack: Bool = false
+
+    var changedImages: [ContentImage] = []
     private var preApplyImage: UIImage = UIImage()
     
     let context = CIContext()
-    
-//    init(selectedImage: UIImage?) {
-//        self.inputImage = selectedImage
-//    }
     
     func setFilter(_ filter: CIFilter) {
         currentFilter = filter
@@ -61,19 +60,14 @@ final public class FilterImageViewModel: ObservableObject {
     //            applyProcessing()
             }
         }
-        
-
     }
 
     func applyProcessing(by filterIntensity: Double) {
         if let inputKeys = currentFilter?.inputKeys {
             if let guardCurrentFilter = self.currentFilter {
-//                print("inputKeys ===> \(inputKeys)")
-//                let input = CIImage(image: processedImage!)!
-                
                 switch filtersType {
                 case .photoEffect:
-                    print("photoEffect")
+                    break
                 case .blur:
                     applyBlur(filter: guardCurrentFilter)
                 case .saturation:
@@ -85,7 +79,7 @@ final public class FilterImageViewModel: ObservableObject {
                 case .pixellate:
                     applyPixellate(filter: guardCurrentFilter)
                 case .linearToSRGBToneCurve:
-                    print("linearToSRGBToneCurve")
+                    break
                 case .none:
                     break
                 }
@@ -107,11 +101,7 @@ final public class FilterImageViewModel: ObservableObject {
             image = Image(uiImage: uiImage)
 //            processedImage = uiImage
         } else {
-//            if let cgimg = context.createCGImage(outputImage, from: CGRect(x: 0, y: 0, width: input.extent.width, height: input.extent.height)) {
-//                let uiImage = UIImage(cgImage: cgimg, scale: 1, orientation: inputImage?.imageOrientation ?? .up)
-//                imageGradient = Image(uiImage: uiImage)
-////                        processedImage = uiImage
-//            }
+
         }
     }
     
@@ -142,15 +132,7 @@ final public class FilterImageViewModel: ObservableObject {
             switch filtersType {
             case .photoEffect:
                 return false
-            case .blur:
-                return true
-            case .saturation:
-                return true
-            case .vignette:
-                return true
-            case .crystallize:
-                return true
-            case .pixellate:
+            case .blur, .saturation, .vignette, .crystallize, .pixellate:
                 return true
             case .linearToSRGBToneCurve:
                 return false
@@ -164,12 +146,12 @@ final public class FilterImageViewModel: ObservableObject {
 extension FilterImageViewModel {
 
     func applyBlur(filter: CIFilter) {
-        if filter.inputKeys.contains(kCIInputAmountKey) {
-            filter.setValue(Float(filterIntensity) * 10, forKey: kCIInputAmountKey)
-        }
-        if filter.inputKeys.contains(kCIInputRadiusKey) {
+//        if filter.inputKeys.contains(kCIInputAmountKey) {
+//            filter.setValue(Float(filterIntensity) * 10, forKey: kCIInputAmountKey)
+//        }
+//        if filter.inputKeys.contains(kCIInputRadiusKey) {
             filter.setValue(filterIntensity * 100, forKey: kCIInputRadiusKey)
-        }
+//        }
     }
     
     func applySaturation(filter: CIFilter) {
@@ -180,10 +162,10 @@ extension FilterImageViewModel {
     
     func applyVignette(filter: CIFilter) {
 //        if inputKeys.contains(kCIInputIntensityKey) {
-        filter.setValue(filterIntensity * 10, forKey: kCIInputIntensityKey)
+        filter.setValue(filterIntensity * 5, forKey: kCIInputIntensityKey)
 //        }
 //        if inputKeys.contains(kCIInputRadiusKey) {
-        filter.setValue(filterIntensity * 100, forKey: kCIInputRadiusKey)
+        filter.setValue(filterIntensity * 50, forKey: kCIInputRadiusKey)
 //        }
     }
     
@@ -197,16 +179,23 @@ extension FilterImageViewModel {
 
     @MainActor
     func removeBackgroundImage() {
+        currentState = .loading
         guard let processedImage = processedImage else {
             return
         }
+
         Task {
-            let uiImage = try? await removeBackground(of: processedImage)
-            guard let cgImage = uiImage?.cgImage else { return }
-            let helpUIImage = UIImage(cgImage: cgImage, scale: 1, orientation: inputImage?.imageOrientation ?? .up)
-            self.processedImage = helpUIImage
-            image = Image(uiImage: helpUIImage)
-            
+            do {
+                let uiImage = try await removeBackground(of: processedImage)
+                guard let cgImage = uiImage.cgImage else { return }
+                let helpUIImage = UIImage(cgImage: cgImage, scale: 1, orientation: inputImage?.imageOrientation ?? .up)
+                self.processedImage = helpUIImage
+                image = Image(uiImage: helpUIImage)
+                self.currentState = .content
+            } catch {
+                print("ERROR: \(error.localizedDescription)")
+                self.currentState = .content
+            }
         }
     }
     
@@ -217,66 +206,88 @@ extension FilterImageViewModel {
         guard let processedImage = processedImage else { return }
         let imageSaver = ImageSaver()
         imageSaver.successHandler = {
-            print("Success!")
+            self.showSaveSuccessSnack.toggle()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                self.showSaveSuccessSnack.toggle()
+            }
         }
         imageSaver.errorHandler = {
-            print("Oops: \($0.localizedDescription)")
+            print("ERROR: \($0.localizedDescription)")
         }
         imageSaver.writeToPhotoAlbum(image: processedImage)
     }
     
     func newImage() {
-        inputImage = nil
-        imageGradient = nil
+//        inputImage = nil
         currentFilter = nil
-        processedImage = nil
+//        processedImage = nil
         changedImages = []
-        imageGradient = nil
         filtersType = .none
         showingImagePicker = true
     }
     
     func close() {
-        imageGradient = nil
         currentFilter = nil
         processedImage = nil
         changedImages = []
-        imageGradient = nil
         filtersType = .none
+    }
+    
+    func applyPreviousFilter() {
+        changedImages.removeLast()
+        if let contentImage = changedImages.last {
+            processedImage = contentImage.image
+            filterIntensity = contentImage.filterIntensity
+            currentFilter = contentImage.imageFilter
+            image = Image(uiImage: contentImage.image)
+        } else {
+            processedImage = inputImage
+            currentFilter = nil
+            image = Image(uiImage: inputImage!)
+            
+        }
+    }
+
+    func longProccess() {
+        currentState = .loading
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+            self.currentState = .content
+        }
     }
 }
 
-//if inputKeys.contains("inputMaxComponents") {
-//    guardCurrentFilter.setValue(CIVector(x: filterIntensity, y: filterIntensity, z: filterIntensity, w: 1.0), forKey: "inputMaxComponents")
-//}
-//
-//if inputKeys.contains("inputPoint0") {
-//    print("width: \(input.extent.width), height: \(input.extent.height)")
-//    guardCurrentFilter.setValue(CIVector(
-//        x: input.extent.width,
-//        y: input.extent.height / 2),
-//                                forKey: "inputPoint0")
-//}
-//if inputKeys.contains("inputPoint1") {
-//    guardCurrentFilter.setValue(CIVector(
-//        x:  input.extent.width - point1ToPoint2 * 100,
-//        y:  input.extent.height / 2),
-//                                forKey: "inputPoint1")
-//}
-//
-//if inputKeys.contains("inputColor0") {
-//    guardCurrentFilter.setValue(CIColor(red: 246/255, green: 66/255, blue: 227/255, alpha: 0.1),
-//                                forKey: "inputColor0")
-//}
-//
-//if inputKeys.contains("inputColor1") {
-//    guardCurrentFilter.setValue(CIColor(red: 246/255, green: 66/255, blue: 227/255, alpha: filterIntensity),
-//                                forKey: "inputColor1")
-//}
-//
-//if inputKeys.contains(kCIInputCenterKey) {
-//    guardCurrentFilter.setValue(CIVector(
-//        x: input.extent.width - input.extent.width / 2,
-//        y: input.extent.height - input.extent.height / 2),
-//                                forKey: kCIInputCenterKey)
-//}
+extension FilterImageViewModel {
+    
+    func blurFilters() -> [FilterModel] {
+//        blurFilters.indices.forEach { blurFilters[$0].image = self.inputImage! }
+//        blurFilters[index].isSelected = true
+
+//        guard let index = blurFiltersList.firstIndex(where: {$0.filter == currentFilter}) else {
+//            print("FALSE = \(blurFiltersList.count)")
+//            return blurFiltersList
+//        }
+//        print("TRUE")
+//        blurFiltersList.indices.forEach { blurFiltersList[$0].isSelected = false }
+//        blurFiltersList[index].selectFilter()
+        let blurFiltersList: [FilterModel] = [FilterModel(name: "Блюр 1", filter: CIFilter.boxBlur(), image: self.inputImage ?? UIImage()),
+                                          FilterModel(name: "Блюр 2", filter: CIFilter.discBlur(), image:  self.inputImage ?? UIImage()),
+                                          FilterModel(name: "Блюр 3", filter: CIFilter.gaussianBlur(), image: self.inputImage ?? UIImage())]
+        return blurFiltersList
+    }
+    
+    func photoEffectFilters() -> [FilterModel] {
+        let photoEffectfilters: [FilterModel] = [FilterModel(name: "Chrome", filter: CIFilter.photoEffectChrome(), image: self.inputImage ?? UIImage()),
+                                      FilterModel(name: "Fade", filter: CIFilter.photoEffectFade(), image: self.inputImage ?? UIImage()),
+                                      FilterModel(name: "Instant", filter: CIFilter.photoEffectInstant(), image: self.inputImage ?? UIImage()),
+                                      FilterModel(name: "Noir", filter: CIFilter.photoEffectNoir(), image: self.inputImage ?? UIImage()),
+                                      FilterModel(name: "Process", filter: CIFilter.photoEffectProcess(), image: self.inputImage ?? UIImage()),
+                                      FilterModel(name: "Tonal", filter: CIFilter.photoEffectTonal(), image: self.inputImage ?? UIImage()),
+                                      FilterModel(name: "Transfer", filter: CIFilter.photoEffectTransfer(), image: self.inputImage ?? UIImage())]
+        
+//        photoEffectfilters.indices.filter { photoEffectfilters[$0].filter == currentFilter }
+//                          .forEach { photoEffectfilters[$0].selectFilter() }
+//        photoEffectfilters.indices.forEach { photoEffectfilters[$0].selectFilter()}
+        return photoEffectfilters
+    }
+}

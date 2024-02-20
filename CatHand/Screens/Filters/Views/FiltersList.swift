@@ -9,13 +9,11 @@ import SwiftUI
 import CoreImage
 import CoreImage.CIFilterBuiltins
 
-struct BlurList: View {
+struct FiltersList: View {
 
-    @ObservedObject var filterImageViewModel: FilterImageViewModel
-    
-    let filters: [FilterModel] = [FilterModel(filter: CIFilter.boxBlur()),
-                                  FilterModel(filter: CIFilter.discBlur()),
-                                  FilterModel(filter: CIFilter.gaussianBlur())]
+    let id: FiltersType
+    var filters: [FilterModel]
+    var applyFilter: (CIFilter) -> ()
     
     var body: some View {
         filterView()
@@ -23,17 +21,34 @@ struct BlurList: View {
     
     @ViewBuilder
     func filterView() -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(filters) { filter in
-                    PhotoFilterCell(filterImageViewModel: filterImageViewModel, inputImage: $filterImageViewModel.processedImage, currentFilter: filter.filter) {
-                        filterImageViewModel.setFilter(filter.filter)
+        ScrollViewReader { scrollProxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(filters) { filterModel in
+                        PhotoFilterCell(model: filterModel, onApplyFilter: applyFilter)
                     }
                 }
             }
         }
     }
 }
+
+extension FiltersList: Equatable {
+    static func == (lhs: FiltersList, rhs: FiltersList) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+//ForEach(0..<100) { i in
+//    Text("Example \(i)")
+//        .font(.title)
+//        .frame(width: 200, height: 200)
+////                            .background(colors[i % colors.count])
+//        .id(i)
+//        .onTapGesture {
+//            scrollProxy.scrollTo(8, anchor: .top)
+//        }
+//}
 
 //                PhotoFilterCell(inputImage: $filterImageViewModel.inputImage, currentFilter: CIFilter.median()) {
 //                    filterImageViewModel.setFilter(CIFilter.median())

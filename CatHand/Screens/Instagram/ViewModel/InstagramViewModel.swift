@@ -22,20 +22,19 @@ class InstagramViewModel: ObservableObject {
     
     @Published var carouselType: СarouselImagesType = .image
     @Published var fetchedImages: [ImageAsset] = []
-    var fetchedImagesFromCD: [ImageAsset] = []
+    var libraryImages: [ImageAsset] = []
     
     @Published var savedVideos: [ImageAsset] = ImageAsset.examples.reversed()
     @Published var savedPosts: [ImageAsset] = []
+    @Published var storyImages: [ImageAsset] = []
     
     @Published var savedImagesIndex: Int = -1
     @Published var deleteImageIndex: Int = -1
-    
-    @Published var storyImages: [ImageAsset] = []
-   
-    
+
     @Published var userInfo: UserInfoInstagram? = UserDefaultsService().userInfoInstagram
     
     private let mocContext: NSManagedObjectContext
+    private var needCallSavePostsOrder: Bool = false
     
     var currentState: InstagramScreenState = .loading
     
@@ -58,18 +57,18 @@ class InstagramViewModel: ObservableObject {
         @unknown default:
             print("default Fetch image")
         }
-        self.fetchedImages.append(contentsOf: Array(fetchedImagesFromCD.prefix(20)))
+        self.fetchedImages.append(contentsOf: Array(libraryImages.prefix(20)))
     }
     
     func fetchNextImages() {
-        if fetchedImagesFromCD.count > fetchedImages.count + 20 {
-            self.fetchedImages.append(contentsOf: Array(fetchedImagesFromCD[fetchedImages.count..<fetchedImages.count + 20]))
-        } else if (fetchedImagesFromCD.count - fetchedImages.count) > fetchedImages.count {
-            self.fetchedImages.append(contentsOf: Array(fetchedImagesFromCD[fetchedImages.count..<fetchedImages.count + (fetchedImagesFromCD.count - fetchedImages.count)]))
+        if libraryImages.count > fetchedImages.count + 20 {
+            self.fetchedImages.append(contentsOf: Array(libraryImages[fetchedImages.count..<fetchedImages.count + 20]))
+        } else if (libraryImages.count - fetchedImages.count) > fetchedImages.count {
+            self.fetchedImages.append(contentsOf: Array(libraryImages[fetchedImages.count..<fetchedImages.count + (libraryImages.count - fetchedImages.count)]))
         }
     }
     
-    func fetchImagesFromLibraty() async -> [ImageAsset] {
+    func fetchImagesFromLibrary() async -> [ImageAsset] {
         let options = PHFetchOptions()
         // MARK: Modify as per yout wish
         options.includeHiddenAssets = false
@@ -90,20 +89,13 @@ class InstagramViewModel: ObservableObject {
     func deleteItemImage() {
         switch carouselType {
         case .profile:
-//            self.fetchedImages.append(ImageAsset(thumbnail: profileImage))
-            print("profile DELETE")
             profileImage = UIImage(named: "BackgroundImage")
         case .story:
-//            self.fetchedImages.append(storyImages[savedImagesIndex])
-            print("story DELETE")
             deleteStory()
         case .image:
-//            self.fetchedImages.append(savedPosts[savedImagesIndex])
-            print("image DELETE")
             deletePost()
         case .video:
-//            self.fetchedImages.append((savedVideos[savedImagesIndex]))
-            print("video DELETE")
+            break
         @unknown default:
             print("default Fetch image")
         }
@@ -138,24 +130,20 @@ class InstagramViewModel: ObservableObject {
     
     // MARK: Posts
     
+    func savePostsOrder() {
+        if needCallSavePostsOrder {
+            Task {
+                await changePositionPostInCD()
+            }
+        }
+    }
+    
     func changePositionPost(draggingItem: ImageAsset, image: ImageAsset) {
         if let sourceIndex = savedPosts.firstIndex(of: draggingItem),
            let destinationIndex = savedPosts.firstIndex(of: image) {
             let sourceItem = savedPosts.remove(at: sourceIndex)
             savedPosts.insert(sourceItem, at: destinationIndex)
-//            Task {
-//                await changePositionPostInCD(sourceIndex: sourceIndex, destinationIndex: destinationIndex)
-//            }
-        }
-    }
-    
-    func changePositionPostInCD(sourceIndex: Int, destinationIndex: Int) async {
-        if var savedPostsFromCD = try? mocContext.fetch(InstagramPost.fetchRequest()) {
-            let sourceItem = savedPostsFromCD.remove(at: sourceIndex)
-            savedPostsFromCD.insert(sourceItem, at: destinationIndex)
-        }
-        if mocContext.hasChanges {
-            try? mocContext.save()
+            needCallSavePostsOrder = true
         }
     }
 
@@ -220,15 +208,12 @@ class InstagramViewModel: ObservableObject {
     func updateData() {
         switch carouselType {
         case .profile:
-            print("profile update")
             UserDefaultsService().userInfoInstagram?.imageData = profileImage?.jpegData(compressionQuality: 1.0) ?? Data()
         case .story:
-            print("story update")
             Task {
                 await updateStoryImage()
             }
         case .image:
-            print("image update")
             Task {
                 await updatePost()
             }
@@ -289,6 +274,18 @@ extension InstagramViewModel {
             }
         }
 
+        if mocContext.hasChanges {
+            try? mocContext.save()
+        }
+    }
+
+    func changePositionPostInCD() async {
+        if var savedPostsFromCD = try? mocContext.fetch(InstagramPost.fetchRequest()) {
+            savedPostsFromCD.reverse()
+            for i in 0..<savedPostsFromCD.count {
+                savedPostsFromCD[i].imageData = savedPosts[i].thumbnail?.jpegData(compressionQuality: 1.0)
+            }
+        }
         if mocContext.hasChanges {
             try? mocContext.save()
         }

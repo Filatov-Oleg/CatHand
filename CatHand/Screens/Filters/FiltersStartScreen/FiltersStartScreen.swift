@@ -24,7 +24,16 @@ struct FiltersStartScreen: View {
             Button {
                 showingImagePicker.toggle()
             } label: {
-                Image(systemName: "photo.on.rectangle.angled")
+                Image(systemName: "plus")
+                    .font(.system(size: 70))
+                    .foregroundStyle(Color.gray)
+                    .frame(maxWidth: .infinity, maxHeight: UIScreen.main.bounds.size.height * 0.5)
+                    .background(Color.gray.opacity(0.5))
+                    .padding(.horizontal)
+                    .padding(.top, UIScreen.main.bounds.size.height * 0.15)
+            }
+            .onAppear {
+                print("x: \(UIScreen.main.bounds.size.width), y: \(UIScreen.main.bounds.size.height)")
             }
             .onChange(of: filterImageViewModel.inputImage) { _ in
                 isShowFilterScreen = true
@@ -35,11 +44,11 @@ struct FiltersStartScreen: View {
                 ImagePicker(image: $filterImageViewModel.inputImage)
             }
             .fullScreenCover(isPresented: $isShowFilterScreen) {
-                FiltersScreen(filterImageViewModel: filterImageViewModel)
+                FiltersScreen()
             }
         }
-        .position(y:100)
-        .padding([.horizontal, .vertical])
+        .environmentObject(filterImageViewModel)
+//        .padding([.horizontal, .vertical])
     }
 }
 

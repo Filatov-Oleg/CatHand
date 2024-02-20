@@ -9,13 +9,9 @@ import SwiftUI
 
 
 struct FiltersView: View {
-    
-    @ObservedObject var filterImageViewModel: FilterImageViewModel
 
-    @State private var showBlurList: Bool = false
-    
-//    @State private var type: FiltersType = .none
-    
+    @EnvironmentObject var filterImageViewModel: FilterImageViewModel
+
     var body: some View {
         HStack {
             Button {
@@ -43,26 +39,13 @@ struct FiltersView: View {
                             }
                             .foregroundStyle(Color("TextColor"))
                         }
-                        
-                        Button {
-                            filterImageViewModel.filtersType = .blur
-                        } label: {
-                            VStack {
-                                Image("BlurIcon")
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                Text("Блюр")
-                                    .font(.caption2)
-                            }
-                            .foregroundStyle(Color("TextColor"))
-                        }
-                        
+
                         Button {
                             filterImageViewModel.filtersType = .saturation
                             filterImageViewModel.setFilter(CIFilter.colorControls())
                         } label: {
                             VStack {
-                                Image("BlurIcon")
+                                Image("SaturationIcon")
                                     .resizable()
                                     .frame(width: 24, height: 24)
                                 Text("Контрастность")
@@ -76,7 +59,7 @@ struct FiltersView: View {
                             filterImageViewModel.setFilter(CIFilter.vignette())
                         } label: {
                             VStack {
-                                Image("BlurIcon")
+                                Image("VignetteIcon")
                                     .resizable()
                                     .frame(width: 24, height: 24)
                                 Text("Затемнение")
@@ -90,7 +73,7 @@ struct FiltersView: View {
                             filterImageViewModel.setFilter(CIFilter.crystallize())
                         } label: {
                             VStack {
-                                Image("BlurIcon")
+                                Image("CrystallizeIcon")
                                     .resizable()
                                     .frame(width: 24, height: 24)
                                 Text("Кристализация")
@@ -98,44 +81,29 @@ struct FiltersView: View {
                             }
                             .foregroundStyle(Color("TextColor"))
                         }
-                        
+
                         Button {
-                            filterImageViewModel.filtersType = .pixellate
-                            filterImageViewModel.setFilter(CIFilter.pixellate())
+                            filterImageViewModel.filtersType = .blur
                         } label: {
                             VStack {
                                 Image("BlurIcon")
                                     .resizable()
                                     .frame(width: 24, height: 24)
-                                Text("Пикселизация")
+                                Text("Блюр")
                                     .font(.caption2)
                             }
                             .foregroundStyle(Color("TextColor"))
                         }
 
                         Button {
-                            filterImageViewModel.filtersType = .linearToSRGBToneCurve
-                            filterImageViewModel.setFilter(CIFilter.linearToSRGBToneCurve())
+                            filterImageViewModel.filtersType = .pixellate
+                            filterImageViewModel.setFilter(CIFilter.pixellate())
                         } label: {
                             VStack {
-                                Image("FiltersIcon")
+                                Image("PixellateIcon")
                                     .resizable()
                                     .frame(width: 24, height: 24)
-                                Text("linearToSRGBToneCurve")
-                                    .font(.caption2)
-                            }
-                            .foregroundStyle(Color("TextColor"))
-                        }
-                        
-                        Button {
-                            filterImageViewModel.filtersType = .linearToSRGBToneCurve
-                            filterImageViewModel.setFilter(CIFilter.sRGBToneCurveToLinear())
-                        } label: {
-                            VStack {
-                                Image("FiltersIcon")
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                Text("sRGBToneCurveToLinear")
+                                Text("Пикселизация")
                                     .font(.caption2)
                             }
                             .foregroundStyle(Color("TextColor"))
@@ -145,7 +113,7 @@ struct FiltersView: View {
                             filterImageViewModel.removeBackgroundImage()
                         } label: {
                             VStack {
-                                Image(systemName: "scissors")
+                                Image("DeleteBackgroundIcon")
                                     .resizable()
                                     .frame(width: 24, height: 24)
                                 Text("Удалить фон")
@@ -157,15 +125,11 @@ struct FiltersView: View {
                 }.opacity(filterImageViewModel.filtersType != .none ? 0 : 1)
     
                 if filterImageViewModel.filtersType == .photoEffect  {
-                    HStack {
-                        PhotoEffectList(filterImageViewModel: filterImageViewModel)
-                    }
+                    FiltersList(id: .photoEffect, filters: filterImageViewModel.photoEffectFilters(), applyFilter: filterImageViewModel.setFilter(_:))
                 }
                 
                 if filterImageViewModel.filtersType == .blur {
-                    HStack {
-                        BlurList(filterImageViewModel: filterImageViewModel)
-                    }
+                    FiltersList(id: .blur, filters: filterImageViewModel.blurFilters(), applyFilter: filterImageViewModel.setFilter(_:))
                 }
 
             }
@@ -184,6 +148,8 @@ struct FiltersView: View {
         }
     }
 }
+
+
 
 //#Preview {
 //    FiltersView(filterImageViewModel: .init())

@@ -29,6 +29,8 @@ struct PlannerScreen: View {
             .scrollIndicators(.hidden)
         }
         .vSpacing(.top)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.backgroundColor)
         .overlay(alignment: .bottomTrailing, content: {
             Button {
                 createNewTask.toggle()
@@ -43,7 +45,8 @@ struct PlannerScreen: View {
                             .stroke(Color.mainGradientBackground, lineWidth: 1)
                     )
             }
-            .padding(15)
+            .padding(25)
+            
 
         })
         .onAppear {
@@ -63,10 +66,9 @@ struct PlannerScreen: View {
         }
         .sheet(isPresented: $createNewTask) {
             NewTaskView(viewModel: viewModel)
-//                .presentationDetents([.medium])
+                .presentationDetents([.height(UIScreen.main.bounds.height * 0.3)])
                 .interactiveDismissDisabled()
                 .presentationCornerRadius(24)
-//                .presentationBackground(.yellow)
             
         }
         .task {
@@ -136,13 +138,11 @@ struct PlannerScreen: View {
 //                    Text(day.date.format("E"))
 //                        .font(.callout)
 //                        .fontWeight(.medium)
-////                        .textScale(.secondary) not work?
 //                        .foregroundStyle(.gray)
             
                     Text(day.date.format("dd"))
                         .font(.caption)
                         .fontWeight(.medium)
-//                        .textScale(.secondary) not work?
                         .foregroundStyle(isSameDate(day.date, viewModel.currentDate) ? .white : .gray)
                         .frame(width: 42, height: 42)
                         .background(content: {
@@ -163,7 +163,6 @@ struct PlannerScreen: View {
                         })
 //                        .background(.white.shadow(.drop(radius: 1)), in: Capsule())
                         .background(.clear)
-//                        .border(Color.white, width: 1)
                         .overlay(Circle().stroke(Color.gray, lineWidth: 1))
                 }
                 .hSpacing(.center)

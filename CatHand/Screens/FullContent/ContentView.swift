@@ -24,7 +24,7 @@ struct ContentView: View {
     @StateObject private var coreDataController = CoreDataController()
     
     @State var index = 0
-    @State private var showBackView: Bool = false
+    @State private var showBackView: Bool = true
     
     var body: some View {
         ZStack {
@@ -38,6 +38,8 @@ struct ContentView: View {
                     } label: {
                         HStack(spacing: 8) {
                             Image("Ps")
+                                .resizable()
+                                .frame(width: 24, height: 24)
                             Text("Редактор")
                                 .foregroundColor(.black)
                         }.padding(.vertical, 10)
@@ -53,6 +55,8 @@ struct ContentView: View {
                     } label: {
                         HStack(spacing: 8) {
                             Image("Instagram")
+                                .resizable()
+                                .frame(width: 24, height: 24)
                             Text("Инстаграмм")
                                 .foregroundColor(.black)
                         }.padding(.vertical, 10)
@@ -68,7 +72,9 @@ struct ContentView: View {
                         }
                     } label: {
                         HStack(spacing: 8) {
-                            Image("TikTok")
+                            Image("Planner")
+                                .resizable()
+                                .frame(width: 24, height: 24)
                             Text("Планер")
                                 .foregroundColor(.black)
                         }.padding(.vertical, 10)
@@ -104,24 +110,17 @@ struct ContentView: View {
                 }
                 .padding(.top, UIApplication.shared.windows.first?.safeAreaInsets.top)
                 .padding(.leading)
-                //                .padding()
                 GeometryReader { _ in
                     VStack {
                         if self.index == 0 {
                             FiltersStartScreen()
-//                            FiltersScreen()
+                                .disabled(showBackView ? true : false)
                         } else if self.index == 1 {
                             InstagramScreen(instagramViewModel: InstagramViewModel(mocContext: coreDataController.container.viewContext))
-                                .onAppear {
-                                    print("InstagramScreen appear")
-                                }
-                                .onDisappear {
-                                    print("InstagramScreen disappear")
-                                }
+                                .disabled(showBackView ? true : false)
                         } else if self.index == 2 {
                             PlannerScreen(viewModel: PlannerViewModel(mocContext:  coreDataController.container.viewContext))
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .background(Color.backgroundColor)
+                                .disabled(showBackView ? true : false)
                         } else {
                             EmptyView()
                         }
